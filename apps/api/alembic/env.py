@@ -10,7 +10,7 @@ import app.models.project   # noqa: F401
 import app.models.task      # noqa: F401
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.db_url)
 
 if config.config_file_name:
     fileConfig(config.config_file_name)
@@ -20,7 +20,7 @@ target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
     context.configure(
-        url=settings.DATABASE_URL,
+        url=settings.db_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},

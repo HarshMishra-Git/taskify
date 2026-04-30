@@ -18,5 +18,10 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
+    @property
+    def db_url(self) -> str:
+        # Railway provides postgres:// but SQLAlchemy requires postgresql://
+        return self.DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 
 settings = Settings()
