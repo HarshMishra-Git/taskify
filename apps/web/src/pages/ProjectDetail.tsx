@@ -313,9 +313,6 @@ function AddMemberDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add member</DialogTitle>
-          <DialogDescription>
-            Enter their email address. They'll receive an invite link.
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
@@ -340,8 +337,8 @@ function AddMemberDialog({
             <Select value={role} onValueChange={(v) => setRole(v as "admin" | "member")} disabled={submitting}>
               <SelectTrigger id="m-role"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="member">Member — can update their own tasks</SelectItem>
-                <SelectItem value="admin">Admin — full project access</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>
