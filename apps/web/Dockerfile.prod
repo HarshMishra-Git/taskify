@@ -13,15 +13,13 @@ RUN npm run build
 # ── Stage 2: Serve ────────────────────────────────────────────────────────────
 FROM nginx:alpine
 
-# Install gettext for envsubst
 RUN apk add --no-cache gettext
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx template — envsubst fills in API_INTERNAL_URL at runtime
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
+# Railway injects PORT at runtime; expose a default for local use
 EXPOSE 3003
 
-# envsubst replaces ${API_INTERNAL_URL} then starts nginx
-CMD ["/bin/sh", "-c", "envsubst '${API_INTERNAL_URL}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Substitute both PORT and API_INTERNAL_URL into nginx config at startup
+CMD ["/bin/sh", "-c", "envsubst '${PORT} ${API_INTERNAL_URL}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

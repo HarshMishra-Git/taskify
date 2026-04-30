@@ -7,14 +7,13 @@ on:
     branches: [main]
 
 jobs:
-  # ── CI: Test & Lint ──────────────────────────────────────────────────────────
+  # ── CI: API ──────────────────────────────────────────────────────────────────
   test-api:
-    name: API — Lint & Type Check
+    name: API — Lint
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/api
-
     steps:
       - uses: actions/checkout@v4
 
@@ -26,16 +25,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Check imports (pyflakes)
+      - name: Check imports
         run: pip install pyflakes && python -m pyflakes app/
 
+  # ── CI: Web ──────────────────────────────────────────────────────────────────
   test-web:
     name: Web — Lint & Build
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/web
-
     steps:
       - uses: actions/checkout@v4
 
@@ -56,37 +55,64 @@ jobs:
         env:
           VITE_API_URL: https://placeholder.up.railway.app
 
-  # ── CD: Deploy to Railway ────────────────────────────────────────────────────
+  # ── CD: Deploy API — only when apps/api/** changes ───────────────────────────
   deploy-api:
     name: Deploy API → Railway
     runs-on: ubuntu-latest
-    needs: [test-api, test-web]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
+    needs: [test-api]
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check if API changed
+        id: api-changed
+        uses: tj-actions/changed-files@v44
+        with:
+          files: apps/api/**
+
       - name: Install Railway CLI
+        if: steps.api-changed.outputs.any_changed == 'true'
         run: npm install -g @railway/cli
 
-      - name: Deploy API service
+      - name: Deploy API
+        if: steps.api-changed.outputs.any_changed == 'true'
         run: railway up --service ${{ secrets.RAILWAY_API_SERVICE_ID }} --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
+      - name: Skip (no API changes)
+        if: steps.api-changed.outputs.any_changed != 'true'
+        run: echo "No API changes — skipping deploy"
+
+  # ── CD: Deploy Web — only when apps/web/** changes ───────────────────────────
   deploy-web:
     name: Deploy Web → Railway
     runs-on: ubuntu-latest
-    needs: [test-api, test-web]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
+    needs: [test-web]
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check if Web changed
+        id: web-changed
+        uses: tj-actions/changed-files@v44
+        with:
+          files: apps/web/**
+
       - name: Install Railway CLI
+        if: steps.web-changed.outputs.any_changed == 'true'
         run: npm install -g @railway/cli
 
-      - name: Deploy Web service
+      - name: Deploy Web
+        if: steps.web-changed.outputs.any_changed == 'true'
         run: railway up --service ${{ secrets.RAILWAY_WEB_SERVICE_ID }} --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Skip (no Web changes)
+        if: steps.web-changed.outputs.any_changed != 'true'
+        run: echo "No Web changes — skipping deploy"

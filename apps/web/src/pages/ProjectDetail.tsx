@@ -115,7 +115,7 @@ export default function ProjectDetail() {
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
             {members.map((m) => (
-              <li key={m.user_id} className="flex items-center justify-between gap-4 px-5 py-3">
+              <li key={m.user_id} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar name={m.name} email={m.email} />
                   <div className="min-w-0">
@@ -171,7 +171,7 @@ export default function ProjectDetail() {
             {tasks.map((t) => {
               const assignee = members?.find((m) => m.user_id === t.assigned_to);
               return (
-                <li key={t.id} className="flex items-center gap-4 px-5 py-3.5 transition-colors duration-150 hover:bg-accent">
+                <li key={t.id} className="flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-accent sm:gap-4 sm:px-5 sm:py-3.5">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{t.title}</p>
                     <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
@@ -188,8 +188,8 @@ export default function ProjectDetail() {
                       )}
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    {assignee && <Avatar name={assignee.name} email={assignee.email} size={24} />}
+                  <div className="flex shrink-0 items-center gap-2">
+                    {assignee && <Avatar name={assignee.name} email={assignee.email} size={24} className="hidden sm:flex" />}
                     <TaskStatusControl
                       task={t}
                       canUpdate={canUpdateTask(t)}
@@ -251,7 +251,7 @@ function TaskStatusControl({
 
   return (
     <Select value={task.status} onValueChange={handleChange} disabled={updating}>
-      <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+      <SelectTrigger className="h-8 w-[110px] text-xs sm:w-[140px]"><SelectValue /></SelectTrigger>
       <SelectContent>
         {STATUS_OPTIONS.map((o) => (
           <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>

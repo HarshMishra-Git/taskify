@@ -56,14 +56,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10">
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-card p-5 transition-colors duration-150 hover:bg-accent">
+          <div key={s.label} className="rounded-xl border border-border bg-card p-4 transition-colors duration-150 hover:bg-accent sm:p-5">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">{s.label}</span>
               <s.icon className="h-4 w-4 text-muted-foreground" />
             </div>
-            <p className="mt-3 text-3xl font-semibold tracking-tight">{s.value}</p>
+            <p className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{s.value}</p>
           </div>
         ))}
       </section>
@@ -85,7 +85,7 @@ export default function Dashboard() {
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
             {data.my_tasks.map((t) => (
-              <li key={t.id} className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors duration-150 hover:bg-accent">
+              <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-3 transition-colors duration-150 hover:bg-accent sm:px-5 sm:py-3.5">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{t.title}</p>
                   {t.due_date && (
