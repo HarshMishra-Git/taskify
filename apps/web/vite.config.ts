@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 3003,
@@ -10,12 +10,12 @@ export default defineConfig({
       clientPort: 3003,
     },
     watch: {
-      usePolling: true,   // required on Windows Docker volume mounts
+      usePolling: true,
       interval: 300,
     },
     proxy: {
       "/api": {
-        target: "http://api:8000",   // docker service name
+        target: process.env.VITE_API_URL ?? "http://api:8000",
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ""),
       },
@@ -35,4 +35,4 @@ export default defineConfig({
       "@tanstack/query-core",
     ],
   },
-});
+}));

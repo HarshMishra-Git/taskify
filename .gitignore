@@ -1,0 +1,25 @@
+# Environment variables — never commit real .env files
+.env
+.env.local
+.env.production
+apps/api/.env
+apps/web/.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+apps/web/dist/
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
