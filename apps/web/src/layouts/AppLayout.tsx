@@ -34,13 +34,17 @@ export default function AppLayout() {
   const [newOpen,   setNewOpen]   = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [dropOpen,  setDropOpen]  = useState(false);
+  const [mobileDropOpen, setMobileDropOpen] = useState(false);
 
-  const dropRef = useRef<HTMLDivElement>(null);
+  const dropRef       = useRef<HTMLDivElement>(null);
+  const mobileDropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropRef.current && !dropRef.current.contains(e.target as Node))
         setDropOpen(false);
+      if (mobileDropRef.current && !mobileDropRef.current.contains(e.target as Node))
+        setMobileDropOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -184,18 +188,18 @@ export default function AppLayout() {
           </div>
 
           {/* User avatar dropdown */}
-          <div className="relative" ref={dropRef}>
+          <div className="relative" ref={mobileDropRef}>
             <button
-              onClick={() => setDropOpen((o) => !o)}
+              onClick={() => setMobileDropOpen((o) => !o)}
               className="flex items-center gap-1.5 rounded-md px-2 py-1.5 transition-colors duration-150 hover:bg-accent"
             >
               <Avatar name={user?.name} email={user?.email} size={26} />
-              <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform duration-150", dropOpen && "rotate-180")} />
+              <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform duration-150", mobileDropOpen && "rotate-180")} />
             </button>
             <div
               className={cn(
                 "absolute right-0 top-full mt-1.5 w-52 origin-top-right rounded-lg border border-border bg-popover py-1 shadow-sm transition-all duration-150",
-                dropOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none",
+                mobileDropOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none",
               )}
             >
               <div className="border-b border-border px-3 py-2">
@@ -203,7 +207,7 @@ export default function AppLayout() {
                 <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
               </div>
               <button
-                onClick={() => { setDropOpen(false); logout(); }}
+                onClick={() => { setMobileDropOpen(false); logout(); }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground"
               >
                 <LogOut className="h-3.5 w-3.5" />

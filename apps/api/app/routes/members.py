@@ -37,6 +37,26 @@ def invite_member_by_email(
     return member_service.add_member_by_email(project_id, payload.email, payload.role, current_user, db)
 
 
+@router.delete("/{project_id}/members/{user_id}", status_code=204)
+def remove_member(
+    project_id: uuid.UUID,
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    member_service.remove_member(project_id, user_id, current_user, db)
+
+
+@router.delete("/{project_id}/invites", status_code=204)
+def revoke_invite(
+    project_id: uuid.UUID,
+    email: str = Query(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    member_service.revoke_invite(project_id, email, current_user, db)
+
+
 @router.post("/invites/accept")
 def accept_invite(
     token: str = Query(...),

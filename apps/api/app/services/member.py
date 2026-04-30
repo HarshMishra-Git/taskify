@@ -132,7 +132,42 @@ def add_member_by_email(project_id: uuid.UUID, email: str, role: RoleEnum, curre
     return {"message": "Invite sent", "user_exists": target_user is not None}
 
 
-def accept_invite(token: str, user: User, db: Session) -> dict:
+def remove_member(project_id: uuid.UUID, target_user_id: uuid.UUID, current_user: User, db: Session) -> None:
+    """Admin removes an active member from the project."""
+    membership = db.query(ProjectMember).filter(
+        ProjectMember.user_id == current_user.id,
+        ProjectMember.project_id == project_id,
+    ).first()
+    if not membership or membership.role != RoleEnum.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can remove members")
+    if target_user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot remove yourself")
+    target = db.query(ProjectMember).filter(
+        ProjectMember.user_id == target_user_id,
+        ProjectMember.project_id == project_id,
+    ).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="Member not found")
+    db.delete(target)
+    db.commit()
+
+
+def revoke_invite(project_id: uuid.UUID, email: str, current_user: User, db: Session) -> None:
+    """Admin revokes a pending invite."""
+    membership = db.query(ProjectMember).filter(
+        ProjectMember.user_id == current_user.id,
+        ProjectMember.project_id == project_id,
+    ).first()
+    if not membership or membership.role != RoleEnum.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can revoke invites")
+    db.query(ProjectInvite).filter(
+        ProjectInvite.project_id == project_id,
+        ProjectInvite.email == email.lower().strip(),
+        ProjectInvite.accepted_at == None,  # noqa: E711
+    ).delete()
+    db.commit()
+
+
     """Accept a project invite — adds user to project if not already member."""
     hashed = _hash_token(token)
     invite = db.query(ProjectInvite).filter(ProjectInvite.token == hashed).first()

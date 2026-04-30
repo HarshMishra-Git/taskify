@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { Plus, Users, ListChecks, UserPlus, Calendar, CalendarIcon } from "lucide-react";
+import { Plus, Users, ListChecks, UserPlus, Calendar, CalendarIcon, Trash2 } from "lucide-react";
 import { api, ApiError, Member, Project, Task, TaskStatus, User } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageHeader } from "@/contexts/PageHeaderContext";
@@ -144,6 +144,13 @@ export default function ProjectDetail() {
                   >
                     {m.role}
                   </span>
+                  {isAdmin && m.user_id !== user?.id && (
+                    <RemoveMemberButton
+                      projectId={String(id)}
+                      member={m}
+                      onRemoved={loadAll}
+                    />
+                  )}
                 </div>
               </li>
             ))}
@@ -230,6 +237,48 @@ export default function ProjectDetail() {
         onCreated={loadAll}
       />
     </div>
+  );
+}
+
+// ── RemoveMemberButton ───────────────────────────────────────────────────────
+
+function RemoveMemberButton({ projectId, member, onRemoved }: {
+  projectId: string;
+  member: Member;
+  onRemoved: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  const handle = async () => {
+    if (!confirm(member.pending
+      ? `Revoke invite for ${member.email}?`
+      : `Remove ${member.name || member.email} from this project?`
+    )) return;
+
+    setLoading(true);
+    try {
+      if (member.pending) {
+        await api(`/projects/${projectId}/invites?email=${encodeURIComponent(member.email!)}`, { method: "DELETE" });
+      } else {
+        await api(`/projects/${projectId}/members/${member.user_id}`, { method: "DELETE" });
+      }
+      onRemoved();
+    } catch (e) {
+      toast({ title: "Failed", description: e instanceof ApiError ? e.message : "Error", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handle}
+      disabled={loading}
+      aria-label="Remove member"
+      className="rounded-md p-1 text-muted-foreground transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </button>
   );
 }
 
