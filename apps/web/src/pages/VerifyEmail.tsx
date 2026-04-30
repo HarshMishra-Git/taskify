@@ -8,11 +8,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api, ApiError } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
+const VERIFIED_KEY = "auth_verified";
+
 export default function VerifyEmail() {
   const [searchParams]  = useSearchParams();
   const location        = useLocation();
   const navigate        = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { loginWithToken, user, loading } = useAuth();
 
   const token = searchParams.get("token");
   const email = (location.state as { email?: string } | null)?.email ?? "";
@@ -21,12 +23,19 @@ export default function VerifyEmail() {
   const [errorMsg,  setErrorMsg]  = useState("");
   const [resending, setResending] = useState(false);
 
+  // If already authenticated, no need to stay on this page
+  useEffect(() => {
+    if (!loading && user) navigate("/", { replace: true });
+  }, [user, loading, navigate]);
+
   // Auto-verify if token present in URL
   useEffect(() => {
     if (!token) return;
     (async () => {
       try {
         const res = await api<{ access_token: string }>(`/auth/verify?token=${token}`, { auth: false });
+        // Signal other open tabs that verification succeeded
+        localStorage.setItem(VERIFIED_KEY, "true");
         setStatus("success");
         setTimeout(() => {
           loginWithToken(res.access_token);
@@ -38,6 +47,40 @@ export default function VerifyEmail() {
       }
     })();
   }, [token]); // eslint-disable-line
+
+  // Cross-tab sync: redirect idle tab when another tab completes verification
+  useEffect(() => {
+    if (status !== "idle") return;
+
+    // Check immediately in case flag was set before this effect ran
+    if (localStorage.getItem(VERIFIED_KEY) === "true") {
+      localStorage.removeItem(VERIFIED_KEY);
+      navigate("/", { replace: true });
+      return;
+    }
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === VERIFIED_KEY && e.newValue === "true") {
+        localStorage.removeItem(VERIFIED_KEY);
+        navigate("/", { replace: true });
+      }
+    };
+
+    // Fallback: check on tab focus (handles browsers that batch storage events)
+    const onFocus = () => {
+      if (localStorage.getItem(VERIFIED_KEY) === "true") {
+        localStorage.removeItem(VERIFIED_KEY);
+        navigate("/", { replace: true });
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [status, navigate]);
 
   const resend = async () => {
     if (!email) {

@@ -46,22 +46,54 @@ def get_project(project_id: uuid.UUID, current_user: User, db: Session) -> Proje
 
 
 def get_project_members(project_id: uuid.UUID, current_user: User, db: Session) -> list[MemberOut]:
+    from app.models.invite import ProjectInvite
+    from datetime import datetime, timezone
+
     if not db.get(Project, project_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     _require_membership(current_user.id, project_id, db)
+
+    # Active members
     rows = (
         db.query(ProjectMember, User)
         .join(User, User.id == ProjectMember.user_id)
         .filter(ProjectMember.project_id == project_id)
         .all()
     )
-    return [
+    result = [
         MemberOut(
             user_id=pm.user_id,
             project_id=pm.project_id,
             role=pm.role,
             name=u.name,
             email=u.email,
+            pending=False,
         )
         for pm, u in rows
     ]
+
+    # Pending invites — users who don't have an account yet (not accepted, not expired)
+    active_emails = {u.email for _, u in rows}
+    pending_invites = (
+        db.query(ProjectInvite)
+        .filter(
+            ProjectInvite.project_id == project_id,
+            ProjectInvite.accepted_at == None,  # noqa: E711
+            ProjectInvite.token_expiry > datetime.now(timezone.utc),
+        )
+        .all()
+    )
+    seen_pending = set()
+    for inv in pending_invites:
+        if inv.email not in active_emails and inv.email not in seen_pending:
+            seen_pending.add(inv.email)
+            result.append(MemberOut(
+                user_id=None,
+                project_id=inv.project_id,
+                role=inv.role,
+                name=None,
+                email=inv.email,
+                pending=True,
+            ))
+
+    return result

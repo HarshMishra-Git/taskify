@@ -90,12 +90,12 @@ export type Project = {
 };
 
 export type Member = {
-  user_id: string;
+  user_id: string | null;
   project_id: string;
   role: "admin" | "member";
-  // enriched client-side after lookup
   name?: string;
   email?: string;
+  pending?: boolean;
 };
 
 export type TaskStatus = "todo" | "in_progress" | "done";

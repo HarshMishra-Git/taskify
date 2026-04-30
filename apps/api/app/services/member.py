@@ -141,9 +141,10 @@ def accept_invite(token: str, user: User, db: Session) -> dict:
         raise HTTPException(status_code=400, detail="Invalid or expired invite link")
     if invite.token_expiry < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Invite link has expired")
-    if invite.accepted_at:
-        # Already accepted — just return project_id so frontend can redirect
-        return {"project_id": str(invite.project_id)}
+
+    # Mark accepted regardless
+    if not invite.accepted_at:
+        invite.accepted_at = datetime.now(timezone.utc)
 
     existing = db.query(ProjectMember).filter(
         ProjectMember.user_id == user.id,
@@ -154,9 +155,7 @@ def accept_invite(token: str, user: User, db: Session) -> dict:
         member = ProjectMember(user_id=user.id, project_id=invite.project_id, role=invite.role)
         db.add(member)
 
-    invite.accepted_at = datetime.now(timezone.utc)
     db.commit()
-
     return {"project_id": str(invite.project_id)}
 
 

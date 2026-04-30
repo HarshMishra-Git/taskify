@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Plus, Users, ListChecks, UserPlus, Calendar } from "lucide-react";
+import { format } from "date-fns";
+import { Plus, Users, ListChecks, UserPlus, Calendar, CalendarIcon } from "lucide-react";
 import { api, ApiError, Member, Project, Task, TaskStatus, User } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageHeader } from "@/contexts/PageHeaderContext";
@@ -11,6 +12,8 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -27,6 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "todo",        label: "Todo"        },
@@ -52,7 +56,7 @@ export default function ProjectDetail() {
   }, [project?.name, setMeta]);
 
   const isAdmin = useMemo(() => {
-    const me = members?.find((m) => m.user_id === user?.id);
+    const me = members?.find((m) => m.user_id === user?.id && !m.pending);
     return me?.role === "admin";
   }, [members, user]);
 
@@ -115,7 +119,7 @@ export default function ProjectDetail() {
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
             {members.map((m) => (
-              <li key={m.user_id} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+              <li key={m.user_id ?? m.email} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar name={m.name} email={m.email} />
                   <div className="min-w-0">
@@ -127,14 +131,20 @@ export default function ProjectDetail() {
                     )}
                   </div>
                 </div>
-                {/* Role badge */}
-                <span className={`shrink-0 rounded-md border px-2 py-0.5 text-xs font-medium capitalize
-                  ${m.role === "admin"
-                    ? "border-foreground/20 bg-foreground text-background"
-                    : "border-border text-muted-foreground"}`}
-                >
-                  {m.role}
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  {m.pending && (
+                    <span className="rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                      Pending
+                    </span>
+                  )}
+                  <span className={`rounded-md border px-2 py-0.5 text-xs font-medium capitalize
+                    ${m.role === "admin"
+                      ? "border-foreground/20 bg-foreground text-background"
+                      : "border-border text-muted-foreground"}`}
+                  >
+                    {m.role}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>
@@ -169,7 +179,7 @@ export default function ProjectDetail() {
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
             {tasks.map((t) => {
-              const assignee = members?.find((m) => m.user_id === t.assigned_to);
+              const assignee = members?.find((m) => !m.pending && m.user_id === t.assigned_to);
               return (
                 <li key={t.id} className="flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-accent sm:gap-4 sm:px-5 sm:py-3.5">
                   <div className="min-w-0 flex-1">
@@ -370,10 +380,10 @@ function NewTaskDialog({
 }) {
   const [title,      setTitle]      = useState("");
   const [assignedTo, setAssignedTo] = useState<string>("");
-  const [dueDate,    setDueDate]    = useState<string>("");
+  const [dueDate,    setDueDate]    = useState<Date | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);
 
-  const reset = () => { setTitle(""); setAssignedTo(""); setDueDate(""); };
+  const reset = () => { setTitle(""); setAssignedTo(""); setDueDate(undefined); };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -386,7 +396,7 @@ function NewTaskDialog({
           project_id:  projectId,
           title:       title.trim(),
           assigned_to: assignedTo || null,
-          due_date:    dueDate    || null,
+          due_date:    dueDate ? format(dueDate, "yyyy-MM-dd") : null,
           status:      "todo",
         },
       });
@@ -431,8 +441,8 @@ function NewTaskDialog({
                   {members.length === 0 ? (
                     <div className="px-2 py-1.5 text-xs text-muted-foreground">No members yet</div>
                   ) : (
-                    members.map((m) => (
-                      <SelectItem key={m.user_id} value={m.user_id}>
+                    members.filter((m) => !m.pending).map((m) => (
+                      <SelectItem key={m.user_id!} value={m.user_id!}>
                         {m.name || m.email || "Unknown"}
                       </SelectItem>
                     ))
@@ -441,14 +451,27 @@ function NewTaskDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="t-due">Due date</Label>
-              <Input
-                id="t-due"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                disabled={submitting}
-              />
+              <Label>Due date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn("w-full justify-start text-left font-normal", !dueDate && "text-muted-foreground")}
+                    disabled={submitting}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dueDate ? format(dueDate, "MMM d, yyyy") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarUI
+                    mode="single"
+                    selected={dueDate}
+                    onSelect={setDueDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           <DialogFooter className="gap-2">

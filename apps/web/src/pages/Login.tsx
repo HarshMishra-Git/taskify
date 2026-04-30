@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/AuthShell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ export default function Login() {
   const from      = state?.from?.pathname || "/";
   const [email,      setEmail]      = useState(state?.email ?? "");
   const [password,   setPassword]   = useState("");
+  const [showPwd,    setShowPwd]    = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -56,17 +58,29 @@ export default function Login() {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            maxLength={128}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPwd ? "text" : "password"}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              maxLength={128}
+              className="pr-9"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPwd((v) => !v)}
+              tabIndex={-1}
+              aria-label={showPwd ? "Hide password" : "Show password"}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting && <InlineLoader className="mr-2" />}

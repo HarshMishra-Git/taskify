@@ -56,7 +56,10 @@ export default function InvitePage() {
     if (loading || !user || !info) return;
     (async () => {
       try {
-        const res = await api<{ project_id: string }>(`/projects/invites/accept?token=${token}`);
+        const res = await api<{ project_id: string }>(
+          `/projects/invites/accept?token=${token}`,
+          { method: "POST" },
+        );
         navigate(`/projects/${res.project_id}`, { replace: true });
       } catch (e) {
         toast({ title: "Could not accept invite", description: e instanceof ApiError ? e.message : "Error", variant: "destructive" });
@@ -102,7 +105,10 @@ function InviteLogin({
     setSubmitting(true);
     try {
       await login(info.email, password);
-      const res = await api<{ project_id: string }>(`/projects/invites/accept?token=${token}`);
+      const res = await api<{ project_id: string }>(
+        `/projects/invites/accept?token=${token}`,
+        { method: "POST" },
+      );
       navigate(`/projects/${res.project_id}`, { replace: true });
     } catch (err) {
       toast({ title: "Sign in failed", description: err instanceof ApiError ? err.message : "Error", variant: "destructive" });
@@ -182,7 +188,10 @@ function InviteSignup({
 
       loginWithToken(loginRes.access_token);
 
-      const inviteRes = await api<{ project_id: string }>(`/projects/invites/accept?token=${token}`);
+      const inviteRes = await api<{ project_id: string }>(
+        `/projects/invites/accept?token=${token}`,
+        { method: "POST" },
+      );
       navigate(`/projects/${inviteRes.project_id}`, { replace: true });
     } catch (err) {
       toast({ title: "Sign up failed", description: err instanceof ApiError ? err.message : "Error", variant: "destructive" });

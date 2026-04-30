@@ -9,10 +9,11 @@ class MemberAdd(BaseModel):
 
 
 class MemberOut(BaseModel):
-    user_id:    uuid.UUID
+    user_id:    uuid.UUID | None = None
     project_id: uuid.UUID
     role:       RoleEnum
     name:       str | None = None
     email:      str | None = None
+    pending:    bool = False
 
     model_config = {"from_attributes": True}
