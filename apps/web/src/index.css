@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Minimal black & white design system. All colors HSL. */
+
+@layer base {
+  :root {
+    /* Light theme */
+    --background: 0 0% 100%;            /* #FFFFFF */
+    --foreground: 0 0% 0%;              /* #000000 */
+
+    --card: 240 5% 97%;                 /* #F7F7F8 */
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 97%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 240 5% 97%;
+    --muted-foreground: 240 4% 34%;     /* #52525B */
+
+    --accent: 240 5% 96%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;               /* #E4E4E7 */
+    --input: 240 6% 90%;
+    --ring: 0 0% 0%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 0 0% 0%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 0 0% 0%;
+  }
+
+  .dark {
+    /* Dark theme */
+    --background: 0 0% 4%;              /* #0A0A0A */
+    --foreground: 0 0% 100%;            /* #FFFFFF */
+
+    --card: 0 0% 7%;                    /* #111111 */
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 240 5% 65%;     /* #A1A1AA */
+
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 12%;                 /* #1F1F1F */
+    --input: 0 0% 12%;
+    --ring: 0 0% 100%;
+
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+
+  /* Letter spacing for typography polish */
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .hover-lift {
+    @apply transition-all duration-150 ease-out hover:-translate-y-0.5;
+  }
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}
