@@ -3,11 +3,13 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install
+# Use package-lock.json for consistent builds and npm ci for speed/reliability
+COPY package*.json ./
+RUN npm ci
 
 COPY . .
 
+# Run build
 RUN npm run build
 
 # ── Stage 2: Serve ────────────────────────────────────────────────────────────

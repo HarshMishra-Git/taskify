@@ -1,8 +1,7 @@
 import uuid
-from datetime import date
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from app.models.task import Task, StatusEnum
+from app.models.task import Task
 from app.models.project import ProjectMember, Project
 from app.models.user import User
 from app.schemas.task import TaskCreate, TaskUpdate, TaskStatusUpdate, TaskOut
