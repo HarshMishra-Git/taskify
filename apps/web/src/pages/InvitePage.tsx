@@ -177,7 +177,12 @@ function InviteSignup({
     try {
       await api("/auth/signup", {
         method: "POST",
-        body:   { name: name.trim(), email: info.email, password },
+        body:   { 
+          name: name.trim(), 
+          email: info.email, 
+          password,
+          invite_token: token 
+        },
         auth:   false,
       });
 

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import SignupRequest, LoginRequest, TokenResponse
 from app.core.security import hash_password, verify_password, create_access_token
+from app.models.invite import ProjectInvite
 from app.services.email_service import send_verification_email
 
 
@@ -17,30 +18,52 @@ def _generate_token() -> tuple[str, str]:
 
 
 def signup(payload: SignupRequest, db: Session) -> dict:
-    if db.query(User).filter(User.email == payload.email).first():
+    email = payload.email.lower().strip()
+    if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     raw_token, hashed_token = _generate_token()
     expiry = datetime.now(timezone.utc) + timedelta(minutes=30)
 
+    # Check if signing up via invite to auto-verify
+    is_verified = False
+    skip_email  = False
+
+    if payload.invite_token:
+        invite_hash = hashlib.sha256(payload.invite_token.encode()).hexdigest()
+        invite = db.query(ProjectInvite).filter(
+            ProjectInvite.token == invite_hash,
+            ProjectInvite.email == email,
+            ProjectInvite.accepted_at == None,
+            ProjectInvite.token_expiry > datetime.now(timezone.utc)
+        ).first()
+        
+        if invite:
+            is_verified = True
+            skip_email  = True
+
     user = User(
         name=payload.name,
-        email=payload.email,
+        email=email,
         password=hash_password(payload.password),
-        is_verified=False,
-        verification_token=hashed_token,
-        token_expiry=expiry,
+        is_verified=is_verified,
+        verification_token=None if is_verified else hashed_token,
+        token_expiry=None if is_verified else expiry,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
 
-    try:
-        send_verification_email(user.email, user.name, raw_token)
-    except Exception as e:
-        import logging; logging.getLogger(__name__).error("[EMAIL ERROR] %s", e)
+    if not skip_email:
+        try:
+            send_verification_email(user.email, user.name, raw_token)
+        except Exception as e:
+            import logging; logging.getLogger(__name__).error("[EMAIL ERROR] %s", e)
 
-    return {"message": "Account created. Check your email to verify."}
+    return {
+        "message": "Account created. Check your email to verify." if not skip_email else "Account created successfully.",
+        "is_verified": is_verified
+    }
 
 
 def resend_verification(email: str, db: Session) -> dict:

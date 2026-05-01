@@ -3,9 +3,10 @@ from pydantic import BaseModel, EmailStr
 
 
 class SignupRequest(BaseModel):
-    name:     str
-    email:    EmailStr
-    password: str
+    name:         str
+    email:        EmailStr
+    password:     str
+    invite_token: str | None = None
 
 
 class LoginRequest(BaseModel):
