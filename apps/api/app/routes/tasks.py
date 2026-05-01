@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
-from app.schemas.task import TaskCreate, TaskStatusUpdate, TaskOut
+from app.schemas.task import TaskCreate, TaskUpdate, TaskStatusUpdate, TaskOut
 from app.services import task as task_service
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -17,6 +17,16 @@ def create_task(
     db: Session = Depends(get_db),
 ):
     return task_service.create_task(payload, current_user, db)
+
+
+@router.patch("/{task_id}", response_model=TaskOut)
+def update_task(
+    task_id: uuid.UUID,
+    payload: TaskUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return task_service.update_task(task_id, payload, current_user, db)
 
 
 @router.patch("/{task_id}/status", response_model=TaskOut)

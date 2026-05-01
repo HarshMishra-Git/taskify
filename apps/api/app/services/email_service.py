@@ -67,3 +67,19 @@ def send_project_invite_email(
         invite_url=invite_url,
     )
     _send(email, email, f"{inviter_name} added you to {project_name}", html)
+    
+
+def send_task_assignment_email(
+    email: str,
+    user_name: str,
+    task_title: str,
+    project_name: str,
+) -> None:
+    logger.warning("[EMAIL] TASK ASSIGNED to %s: %s", email, task_title)
+    html = _load_template(
+        "task_assigned.html",
+        user_name=user_name,
+        task_title=task_title,
+        project_name=project_name,
+    )
+    _send(email, user_name, f"New Task: {task_title}", html)

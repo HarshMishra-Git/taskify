@@ -49,12 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = res.access_token || res.token;
     if (!token) throw new Error("No token returned from server");
     tokenStore.set(token);
+    localStorage.setItem("auth_event", JSON.stringify({ type: "LOGIN", ts: Date.now() }));
     await refresh();
   }, [refresh]);
 
   // Used after email verification or invite accept — token already obtained
   const loginWithToken = useCallback((token: string) => {
     tokenStore.set(token);
+    localStorage.setItem("auth_event", JSON.stringify({ type: "LOGIN", ts: Date.now() }));
     refresh();
   }, [refresh]);
 

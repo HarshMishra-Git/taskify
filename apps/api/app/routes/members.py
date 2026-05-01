@@ -4,10 +4,13 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
-from app.models.project import RoleEnum
+from app.models.project import RoleEnum, ProjectMember
 from app.models.user import User
 from app.schemas.member import MemberAdd, MemberOut
 from app.services import member as member_service
+
+from app.dependencies.permissions import CheckProjectRole
+
 
 router = APIRouter(prefix="/projects", tags=["members"])
 
@@ -23,6 +26,7 @@ def add_member(
     payload: MemberAdd,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _: ProjectMember = Depends(CheckProjectRole(RoleEnum.admin)),
 ):
     return member_service.add_member(project_id, payload, current_user, db)
 
@@ -33,6 +37,7 @@ def invite_member_by_email(
     payload: AddMemberByEmailRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _: ProjectMember = Depends(CheckProjectRole(RoleEnum.admin)),
 ):
     return member_service.add_member_by_email(project_id, payload.email, payload.role, current_user, db)
 
@@ -43,6 +48,7 @@ def remove_member(
     user_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _: ProjectMember = Depends(CheckProjectRole(RoleEnum.admin)),
 ):
     member_service.remove_member(project_id, user_id, current_user, db)
 
@@ -53,6 +59,7 @@ def revoke_invite(
     email: str = Query(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _: ProjectMember = Depends(CheckProjectRole(RoleEnum.admin)),
 ):
     member_service.revoke_invite(project_id, email, current_user, db)
 

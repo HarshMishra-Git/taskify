@@ -11,6 +11,13 @@ class TaskCreate(BaseModel):
     due_date:    date | None      = None
 
 
+class TaskUpdate(BaseModel):
+    title:       str | None       = None
+    assigned_to: uuid.UUID | None = None
+    due_date:    date | None      = None
+    status:      StatusEnum | None = None
+
+
 class TaskStatusUpdate(BaseModel):
     status: StatusEnum
 

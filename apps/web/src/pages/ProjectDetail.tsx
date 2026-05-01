@@ -29,6 +29,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -250,11 +261,6 @@ function RemoveMemberButton({ projectId, member, onRemoved }: {
   const [loading, setLoading] = useState(false);
 
   const handle = async () => {
-    if (!confirm(member.pending
-      ? `Revoke invite for ${member.email}?`
-      : `Remove ${member.name || member.email} from this project?`
-    )) return;
-
     setLoading(true);
     try {
       if (member.pending) {
@@ -271,14 +277,36 @@ function RemoveMemberButton({ projectId, member, onRemoved }: {
   };
 
   return (
-    <button
-      onClick={handle}
-      disabled={loading}
-      aria-label="Remove member"
-      className="rounded-md p-1 text-muted-foreground transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
-    >
-      <Trash2 className="h-3.5 w-3.5" />
-    </button>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <button
+          disabled={loading}
+          aria-label="Remove member"
+          className="rounded-md p-1 text-muted-foreground transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {member.pending
+              ? `This will revoke the invitation sent to ${member.email}.`
+              : `This will remove ${member.name || member.email} from the project. They will lose access to all tasks and data.`}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handle}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {loading ? "Removing..." : "Remove member"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
